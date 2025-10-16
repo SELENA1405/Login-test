@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spring Boot Login Tester</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f4f7f6;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .container {
+            background-color: #ffffff;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 400px;
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #555;
+            font-weight: bold;
+        }
+        input[type="text"], input[type="password"] {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 20px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            box-sizing: border-box;
+            transition: border-color 0.3s;
+        }
+        input[type="text"]:focus, input[type="password"]:focus {
+            border-color: #007bff;
+            outline: none;
+        }
+        button {
+            width: 100%;
+            padding: 12px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: background-color 0.3s, transform 0.1s;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        button:active {
+            transform: translateY(1px);
+        }
+        .response-section {
+            margin-top: 30px;
+            width: 100%;
+            max-width: 600px;
+        }
+        h2 {
+            color: #007bff;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 5px;
+            margin-bottom: 15px;
+        }
+        pre {
+            background-color: #f9f9f9;
+            padding: 15px;
+            border: 1px dashed #ccc;
+            border-radius: 6px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            min-height: 100px;
+            color: #333;
+        }
+        /* Style for mobile responsiveness */
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Login Service Tester</h1>
+
+        <p>Target Endpoint: <strong>http://localhost:8080/login</strong></p>
+
+        <form id="loginForm">
+            <label for="username">Username:</label>
+            <!-- Use "alice" for successful test -->
+            <input type="text" id="username" value="alice" required>
+
+            <label for="password">Password:</label>
+            <!-- Use "secret" for successful test -->
+            <input type="password" id="password" value="secret" required>
+
+            <button type="submit">Send POST Request</button>
+        </form>
+    </div>
+
+    <div class="response-section">
+        <h2>Server Response</h2>
+        <pre id="responseOutput">Status and response JSON will appear here after submission.</pre>
+    </div>
+
+    <script>
+        const form = document.getElementById('loginForm');
+        const output = document.getElementById('responseOutput');
+        const LOGIN_URL = 'http://localhost:8080/login';
+
+        form.addEventListener('submit', async function(event) {
+            event.preventDefault(); // Prevents the browser from submitting the form normally
+
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+
+            // Construct the JSON body for the request
+            const requestBody = {
+                username: username,
+                password: password
+            };
+
+            output.textContent = "Processing... Sending POST to " + LOGIN_URL;
+
+            try {
+                // Fetch API call to the Spring Boot endpoint
+                const response = await fetch(LOGIN_URL, {
+                    method: 'POST',
+                    headers: {
+                        // Crucial header: tells the server the body is JSON
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(requestBody)
+                });
+
+                // Wait for the JSON body from the response
+                const data = await response.json();
+
+                // Format and display the result
+                const statusLine = "Status: " + response.status + " " + response.statusText;
+                
+                output.textContent = 
+                    statusLine + "\n" +
+                    "-----------------------------------\n" +
+                    JSON.stringify(data, null, 2); // Pretty-print the JSON
+
+                // Change the output style based on success/failure
+                if (response.ok) {
+                    output.style.color = '#155724'; // Dark green
+                    output.style.borderColor = '#c3e6cb'; // Light green
+                } else {
+                    output.style.color = '#721c24'; // Dark red
+                    output.style.borderColor = '#f5c6cb'; // Light red
+                }
+
+            } catch (error) {
+                // This 'catch' is where you'll see the CORS failure before fixing it
+                output.style.color = '#721c24';
+                output.style.borderColor = '#f5c6cb';
+                output.textContent = 
+                    "🚨 REQUEST BLOCKED OR FAILED 🚨\n\n" +
+                    "This usually means the server is down or the **CORS Policy** blocked the request.\n" +
+                    "To fix CORS, add @CrossOrigin(origins = \"*\") to your Java controller method.\n\n" +
+                    "Error Details: " + error.message;
+            }
+        });
+    </script>
+
+</body>
+</html>
